@@ -6,9 +6,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"encoding/json"
 	"flag"
-	"tcp"
-	service "github.com/dmitrorezn/grpc-service/gen"
+	"net"
+	articlespb "github.com/dmitrorezn/grpc-service/gen"
+	service "github.com/dmitrorezn/grpc-service/gen/service"
 
+	"google.golang.org/grpc"
 )
 
 // set PATH=%PATH%;C:\protoc-21.6-win64\bin;%GOPATH%/bin
@@ -31,22 +33,29 @@ func main()  {
 
 }
 
-type articleServer {
+type articleServer struct {
 	service.ArticleServer
 }
 
-func newServer() articleServer {
+func newServer() *articleServer {
 	return &articleServer{}
 }
 
-func(s *articleServer) GetArticleByID(ctx context.Context,request *service.GetArticleRequest) (*service.ArticleResponce, error) {
+var cc = map[string]string{"1":"test"}
 
-	return 
+func(s *articleServer) GetArticleByID(ctx context.Context, request *articlespb.GetArticleRequest) (resp *articlespb.ArticleResponce,err error) {
+
+	resp.Article = &articlespb.Article{}
+
+	resp.Article.Id = request.Id
+	resp.Article.Title = cc[request.Id]
+
+	return resp, err
 }
 
 func grpcServer() {
 
-	lis, err := tcp.Lisener("tcp", ":"+grpcPort)
+	lis, err := net.Listen("tcp", ":"+*grpcPort)
 
 	if err != nil {
 		panic("grpc Lisener")
@@ -62,9 +71,6 @@ func grpcServer() {
 		panic("grpc liServesener")
 	}
 }
-
-
-
 
 
 func httpServer() {
@@ -85,7 +91,7 @@ func httpServer() {
 	
 	fmt.Println("Start APP server")
 
-	http.ListenAndServe(":"+httpPort, r)
+	http.ListenAndServe(":"+*httpPort, r)
 }
 
 type data struct {
