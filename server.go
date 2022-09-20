@@ -5,10 +5,70 @@ import (
 	"net/http"
 	"github.com/go-chi/chi/v5"
 	"encoding/json"
+	"flag"
+	"tcp"
+	service "github.com/dmitrorezn/grpc-service/gen"
+
+)
+
+// set PATH=%PATH%;C:\protoc-21.6-win64\bin;%GOPATH%/bin
+// 
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative  service/proto/service.proto
+
+var (
+	httpPort = flag.String("http_port","8080","p1")
+	grpcPort = flag.String("grpc_port","9090","p2")
 )
 
 func main()  {
 
+	flag.Parse()
+
+
+	go httpServer()
+
+	go grpcServer()
+
+}
+
+type articleServer {
+	service.ArticleServer
+}
+
+func newServer() articleServer {
+	return &articleServer{}
+}
+
+func(s *articleServer) GetArticleByID(ctx context.Context,request *service.GetArticleRequest) (*service.ArticleResponce, error) {
+
+	return 
+}
+
+func grpcServer() {
+
+	lis, err := tcp.Lisener("tcp", ":"+grpcPort)
+
+	if err != nil {
+		panic("grpc Lisener")
+	}
+
+	s := grpc.NewServer()
+
+
+	service.RegisterArticleServer(s, newServer())
+
+	err = s.Serve(lis)
+
+	if err != nil {
+		panic("grpc liServesener")
+	}
+}
+
+
+
+
+
+func httpServer() {
 	r := chi.NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +86,7 @@ func main()  {
 	
 	fmt.Println("Start APP server")
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":"+httpPort, r)
 }
 
 type data struct {
@@ -36,7 +96,6 @@ type data struct {
 func articleGet(w http.ResponseWriter, r *http.Request) {
 
 	articleID := chi.URLParam(r, "articleID")
-
 
 	d := data{
 		ID: articleID,
