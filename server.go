@@ -10,9 +10,7 @@ import (
 	"net"
 	"context"
 
-	//"github.com/dmitrorezn/grpc-service/gen/proto"
 	service "github.com/dmitrorezn/grpc-service/gen/service"
-	server "github.com/dmitrorezn/grpc-service/gen/service/proto"
 
 	"google.golang.org/grpc"
 )
@@ -23,22 +21,23 @@ import (
 
 var (
 	httpPort = flag.String("http_port","8080","p1")
-	grpcPort = flag.String("grpc_port","9090","p2")
+	grpcPort = flag.String("grpc_port","9092","p2")
 )
 
 func main()  {
 
 	flag.Parse()
 
+	c := make(chan struct{})
+	go httpServer(c)
 
-	go httpServer()
+	go grpcServer(c)
 
-	go grpcServer()
-
+	<-c
 }
 
 type articleServer struct {
-	server.ArticleServer
+	service.ArticleServer
 }
 
 func newServer() *articleServer {
@@ -49,15 +48,21 @@ var cc = map[string]string{"1":"test"}
 
 func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetArticleRequest) (resp *service.ArticleResponce,err error) {
 
+
+	fmt.Println("GetArticleByID: ID = ",request.GetId())
+
+	resp = &service.ArticleResponce{}
+	
 	resp.Article = &service.Article{}
 
-	resp.Article.Id = request.Id
-	resp.Article.Title = cc[request.Id]
+	resp.Article.Id = request.GetId()
+
+	resp.Article.Title = cc[request.GetId()]
 
 	return resp, err
 }
 
-func grpcServer() {
+func grpcServer(c chan struct{}) {
 
 	lis, err := net.Listen("tcp", ":"+*grpcPort)
 
@@ -67,17 +72,23 @@ func grpcServer() {
 
 	s := grpc.NewServer()
 
-	server.RegisterArticleServer(s, newServer())
+	service.RegisterArticleServer(s, newServer())
+
+	fmt.Println("grpc: port =", *grpcPort)
+
 
 	err = s.Serve(lis)
 
 	if err != nil {
+		c <- struct{}{}
 		panic("grpc liServesener")
 	}
+
+	c <- struct{}{}
 }
 
 
-func httpServer() {
+func httpServer(c chan struct{}) {
 	r := chi.NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +106,12 @@ func httpServer() {
 	
 	fmt.Println("Start APP server")
 
+	fmt.Println("http: port =", *httpPort)
+
+
 	http.ListenAndServe(":"+*httpPort, r)
+
+	c <- struct{}{}
 }
 
 type data struct {
