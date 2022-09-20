@@ -7,8 +7,7 @@ import (
 	"encoding/json"
 	"flag"
 	"net"
-	articlespb "github.com/dmitrorezn/grpc-service/gen"
-	service "github.com/dmitrorezn/grpc-service/gen/service"
+	"github.com/dmitrorezn/grpc-service/gen"
 
 	"google.golang.org/grpc"
 )
@@ -43,7 +42,7 @@ func newServer() *articleServer {
 
 var cc = map[string]string{"1":"test"}
 
-func(s *articleServer) GetArticleByID(ctx context.Context, request *articlespb.GetArticleRequest) (resp *articlespb.ArticleResponce,err error) {
+func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetArticleRequest) (resp *service.ArticleResponce,err error) {
 
 	resp.Article = &articlespb.Article{}
 
