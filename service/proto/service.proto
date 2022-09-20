@@ -4,6 +4,7 @@ syntax = "proto3";
 
 package articleservice;
 
+option go_package = "/service";
 
 service article {
     // grpc rest entry point to get article by its unique ID
