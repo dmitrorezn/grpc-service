@@ -54,7 +54,6 @@ func grpcServer() {
 
 	s := grpc.NewServer()
 
-
 	service.RegisterArticleServer(s, newServer())
 
 	err = s.Serve(lis)
