@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"flag"
 	"tcp"
-	service "github.com/dmitrorezn/grpc-service/gen"
+	service "github.com/dmitrorezn/grpc-service"
 
 )
 
