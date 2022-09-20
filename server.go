@@ -6,8 +6,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"encoding/json"
 	"flag"
+
 	"net"
-	"github.com/dmitrorezn/grpc-service/gen"
+	"context"
+
+	//"github.com/dmitrorezn/grpc-service/gen/proto"
+	service "github.com/dmitrorezn/grpc-service/gen/service"
+	server "github.com/dmitrorezn/grpc-service/gen/service/proto"
 
 	"google.golang.org/grpc"
 )
@@ -33,7 +38,7 @@ func main()  {
 }
 
 type articleServer struct {
-	service.ArticleServer
+	server.ArticleServer
 }
 
 func newServer() *articleServer {
@@ -44,7 +49,7 @@ var cc = map[string]string{"1":"test"}
 
 func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetArticleRequest) (resp *service.ArticleResponce,err error) {
 
-	resp.Article = &articlespb.Article{}
+	resp.Article = &service.Article{}
 
 	resp.Article.Id = request.Id
 	resp.Article.Title = cc[request.Id]
@@ -62,7 +67,7 @@ func grpcServer() {
 
 	s := grpc.NewServer()
 
-	service.RegisterArticleServer(s, newServer())
+	server.RegisterArticleServer(s, newServer())
 
 	err = s.Serve(lis)
 
