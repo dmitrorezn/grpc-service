@@ -52,7 +52,7 @@ func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetA
 	fmt.Println("GetArticleByID: ID = ",request.GetId())
 
 	resp = &service.ArticleResponce{}
-	
+
 	resp.Article = &service.Article{}
 
 	resp.Article.Id = request.GetId()
@@ -114,19 +114,20 @@ func httpServer(c chan struct{}) {
 	c <- struct{}{}
 }
 
-type data struct {
-	ID string `json:"id"`
-}
 
 func articleGet(w http.ResponseWriter, r *http.Request) {
 
 	articleID := chi.URLParam(r, "articleID")
 
-	d := data{
-		ID: articleID,
-	}
+	resp := &service.ArticleResponce{}
 
-	repsonce, err := json.Marshal(d)
+	resp.Article = &service.Article{}
+
+	resp.Article.Id = articleID
+
+	resp.Article.Title = cc[articleID]
+
+	repsonce, err := json.Marshal(resp)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}
