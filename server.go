@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"github.com/go-chi/chi/v5"
-	"encoding/json"
+	// "encoding/json"
 	"flag"
 
 	"net"
@@ -13,6 +13,7 @@ import (
 	service "github.com/dmitrorezn/grpc-service/gen/service"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 // set PATH=%PATH%;C:\protoc-21.6-win64\bin;%GOPATH%/bin
@@ -46,7 +47,7 @@ func newServer() *articleServer {
 
 var cc = map[string]string{"1":"test"}
 
-func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetArticleRequest) (resp *service.ArticleResponce,err error) {
+func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetArticleRequest) (resp *service.ArticleResponce, err error) {
 
 
 	fmt.Println("GetArticleByID: ID = ",request.GetId())
@@ -127,10 +128,12 @@ func articleGet(w http.ResponseWriter, r *http.Request) {
 
 	resp.Article.Title = cc[articleID]
 
-	repsonce, err := json.Marshal(resp)
+	repsonce, err := proto.Marshal(resp)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}
+
+	w.
 
 	w.Write(repsonce)
 }
