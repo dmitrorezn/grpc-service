@@ -1,4 +1,3 @@
-
 syntax = "proto3";
 
 
@@ -10,7 +9,7 @@ service article {
     // grpc rest entry point to get article by its unique ID
     rpc GetArticleByID(GetArticleRequest) returns (ArticleResponce) {}
 
-    // rpc GetArticles(GetArticleRequest) returns (stream ArticlesFeature) {}
+    rpc SetArticles(stream Article) returns (ArticlesFeature) {}
 
     // rpc RecordRoute(stream GetArticleRequest) returns (ArticlesFeature) {}
 
