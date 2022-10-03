@@ -5,6 +5,7 @@ import (
 	"io"
 	service "github.com/dmitrorezn/grpc-service/gen/service/proto"
 	"context"
+	metadata "google.golang.org/grpc/metadata"
 )
 
 type articleServer struct {
@@ -18,10 +19,10 @@ func newServer() *articleServer {
 var cc = map[string]string{"1":"test"}
 
 func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetArticleRequest) (resp *service.ArticleResponce, err error) {
+	h, _ := metadata.FromIncomingContext(ctx)
 
-
-	fmt.Println("GetArticleByID: ID = ",request.GetId())
-
+	fmt.Println("GetArticleByID: Metadata = ", h, " ID ",request.GetId())
+	
 	resp = &service.ArticleResponce{}
 
 	resp.Article = &service.Article{}
@@ -29,6 +30,14 @@ func(s *articleServer) GetArticleByID(ctx context.Context, request *service.GetA
 	a := articles[fmt.Sprint(request.GetId())]
 
 	resp.Article = &a
+
+	err = fmt.Errorf("not creted")
+
+	header := metadata.New(map[string]string{})
+
+	header.Set("error", err.Error())
+
+	ctx = metadata.NewOutgoingContext(ctx, header)
 
 	return resp, err
 }
@@ -39,6 +48,10 @@ var ids int
 func(s *articleServer) SetArticles(stream service.Article_SetArticlesServer) error {
 
 	var response = &service.ArticlesFeature{}
+
+	h, _ := metadata.FromIncomingContext(stream.Context())
+
+	fmt.Println("SetArticles: Metadata = ", h)
 
 	for {
 		article, err := stream.Recv()

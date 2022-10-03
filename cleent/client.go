@@ -8,6 +8,8 @@ import (
 	"flag"
 	"fmt"
 	"google.golang.org/grpc/credentials/insecure"
+	metadata "google.golang.org/grpc/metadata"
+	status "google.golang.org/grpc/status"
 	"time"
 )
 
@@ -51,15 +53,32 @@ func ping() {
 	r := &service.GetArticleRequest{}
 
 	for {
-		i := 0
-		for Ids := get(); i <= len(Ids) ; i++ {
-			id := Ids[i]
+		Ids := get()
+		for _, id := range Ids {
 
 			r.Id = id
 
-			resp, err := client.GetArticleByID(context.Background(), r)
+			header := metadata.New(map[string]string{})
+
+			header.Set("client", "GetArticleByID")
+
+			ctx := metadata.NewOutgoingContext(context.Background(), header)
+
+			resp, err := client.GetArticleByID(ctx, r)
 			if err != nil {
-				fmt.Println("GetArticleByID: err =", err)
+				st, ok := status.FromError(err)
+				if !ok {
+					fmt.Println("FromError: Message =", err)
+				}
+
+				time.Sleep(time.Second)
+
+				if msg := st.Message(); 	msg == "not creted" {
+					fmt.Println("GetArticleByID: Message =", msg)
+					continue
+				}
+
+				fmt.Println("GetArticleByID: err =", "m:",st.Message(),"c:",st.Code(),"err:",st.Err(),"dt:", st.Details() )
 				continue
 			}
 			fmt.Println("GetArticleByID", resp)
@@ -76,7 +95,13 @@ func save() {
 
 	a.Type = "new"
 
-	setStream, err := client.SetArticles(context.Background())
+	header := metadata.New(map[string]string{})
+
+	header.Set("client", "save")
+
+	ctx := metadata.NewOutgoingContext(context.Background(), header)
+
+	setStream, err := client.SetArticles(ctx)
 	if err != nil {
 		fmt.Println("SetArticles: err =", err)
 		return
@@ -106,7 +131,7 @@ func save() {
 
 			time.Sleep(time.Second * 10)
 
-			setStream, err = client.SetArticles(context.Background())
+			setStream, err = client.SetArticles(ctx)
 		}
 	}
 }
